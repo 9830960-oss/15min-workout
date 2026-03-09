@@ -115,9 +115,9 @@ body { display: flex; align-items: center; justify-content: center; min-height: 
 const EX = [
   {name:"Отжимания", emoji:"💪", dur:45, rest:15, desc:"Руки на ширине плеч, корпус прямой"},
   {name:"Приседания", emoji:"🦵", dur:45, rest:15, desc:"Спина прямая, колени не выходят за носки"},
+  {name:"Выпады",    emoji:"🏃", dur:45, rest:15, desc:"Шаг вперёд, колено под прямым углом"},
   {name:"Стульчик",  emoji:"🪑", dur:45, rest:15, desc:"Спина к стене, бёдра параллельны полу"},
   {name:"Планка",    emoji:"🔥", dur:45, rest:15, desc:"Тело прямое, взгляд в пол, не задерживай дыхание"},
-  {name:"Выпады",    emoji:"🏃", dur:45, rest:15, desc:"Шаг вперёд, колено под прямым углом"},
 ];
 const ROUNDS = 3;
 const CIRC = 2 * Math.PI * 58;
@@ -161,6 +161,7 @@ function show(name) {
 
 function audio() {
   if (!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
   return audioCtx;
 }
 function beep(f,d,v) {
@@ -242,6 +243,10 @@ function tick() {
 }
 
 function startWorkout() {
+  // Unlock iOS audio on first user gesture
+  if (!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+
   idx=0; elapsed=0; running=true;
   timeLeft = Q[0].ex.dur;
   show('workout');
