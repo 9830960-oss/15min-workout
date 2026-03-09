@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="15 MIN"/>
+<title>15 MIN WORKOUT</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Jost:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; background: #0a0a0a; color: #f0f0f0; font-family: 'Bebas Neue', Impact, sans-serif; overflow: hidden; }
+  #app { min-height: 100vh; min-height: -webkit-fill-available; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; padding-top: calc(20px + env(safe-area-inset-top)); padding-bottom: calc(20px + env(safe-area-inset-bottom)); position: relative; overflow: hidden; }
+  .bg-glow { position: absolute; top: -100px; right: -100px; width: 400px; height: 400px; border-radius: 50%; background: radial-gradient(circle, rgba(238,102,51,0.09) 0%, transparent 70%); pointer-events: none; }
+  .screen { display: none; flex-direction: column; align-items: center; text-align: center; width: 100%; max-width: 400px; animation: slideUp 0.35s ease forwards; }
+  .screen.active { display: flex; }
+  @keyframes slideUp { from { opacity:0; transform:translateY(28px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes pulse { 0%,100% { transform:scale(1); opacity:1; } 50% { transform:scale(1.05); opacity:.75; } }
+
+  .btn { background: #e63; color: #fff; border: none; border-radius: 6px; font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 3px; padding: 15px 40px; cursor: pointer; transition: background .15s, transform .1s; width: 100%; -webkit-appearance: none; }
+  .btn:active { background: #ff4422; transform: scale(.97); }
+  .btn-ghost { background: transparent; border: 1px solid #333; color: #888; border-radius: 6px; font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 2px; padding: 11px 20px; cursor: pointer; transition: border-color .15s, color .15s; -webkit-appearance: none; }
+  .btn-ghost:active { border-color: #666; color: #ccc; }
+
+  /* HOME */
+  .logo-icon { font-size: 56px; margin-bottom: 6px; }
+  .logo-title { font-size: clamp(52px, 13vw, 80px); letter-spacing: 4px; line-height: 1; color: #fff; }
+  .logo-title span { color: #e63; }
+  .logo-sub { font-family: 'Jost', sans-serif; font-weight: 300; font-size: 14px; color: #555; margin: 14px 0 8px; letter-spacing: 1px; }
+  .ex-list { display: flex; flex-direction: column; gap: 9px; margin: 22px 0 30px; width: 100%; }
+  .ex-item { display: flex; align-items: center; gap: 14px; background: #141414; border-radius: 7px; padding: 12px 16px; border-left: 3px solid #e63; }
+  .ex-emoji { font-size: 22px; }
+  .ex-name { font-size: 18px; letter-spacing: 2px; text-align: left; }
+  .ex-desc { font-family: 'Jost', sans-serif; font-size: 12px; color: #555; margin-top: 2px; text-align: left; }
+  .ex-dur { margin-left: auto; font-family: 'Jost', sans-serif; font-size: 13px; color: #e63; white-space: nowrap; }
+
+  /* WORKOUT */
+  .progress-bar-wrap { width: 100%; height: 3px; background: #1a1a1a; border-radius: 2px; margin-bottom: 28px; }
+  .progress-bar-fill { height: 100%; background: linear-gradient(90deg, #e63, #ff8844); border-radius: 2px; transition: width 1s linear; }
+  .round-label { font-family: 'Jost', sans-serif; font-size: 13px; color: #555; letter-spacing: 3px; margin-bottom: 6px; }
+  .timer-wrap { position: relative; display: inline-block; margin: 8px 0 18px; }
+  .timer-inner { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .timer-num { font-size: 50px; line-height: 1; }
+  .timer-label { font-family: 'Jost', sans-serif; font-size: 11px; letter-spacing: 2px; margin-top: 2px; }
+  .ex-big { font-size: clamp(38px, 12vw, 62px); letter-spacing: 3px; line-height: 1.1; margin-bottom: 6px; }
+  .ex-hint { font-family: 'Jost', sans-serif; font-size: 14px; color: #555; margin-bottom: 24px; }
+  .rest-big { font-size: clamp(34px, 10vw, 54px); letter-spacing: 3px; color: #3a9; margin-bottom: 6px; }
+  .next-hint { font-family: 'Jost', sans-serif; font-size: 14px; color: #444; margin-bottom: 24px; }
+  .ctrl-row { display: flex; gap: 10px; justify-content: center; width: 100%; }
+  .ctrl-row .btn { font-size: 18px; padding: 13px 0; flex: 1.6; }
+  .ctrl-row .btn-ghost { font-size: 16px; padding: 11px 0; flex: 1; }
+  .dots { display: flex; gap: 7px; justify-content: center; margin-top: 24px; }
+  .dot { height: 8px; border-radius: 4px; background: #222; transition: width .3s, background .3s; }
+
+  /* DONE */
+  .trophy { font-size: 70px; margin-bottom: 14px; animation: pulse 1.6s infinite; }
+  .done-title { font-size: clamp(48px, 13vw, 72px); letter-spacing: 4px; line-height: 1; }
+  .done-sub { font-family: 'Jost', sans-serif; color: #555; margin: 14px 0 6px; font-size: 15px; }
+  .stats-row { display: flex; justify-content: center; gap: 28px; margin: 22px 0 32px; }
+  .stat-icon { font-size: 28px; }
+  .stat-label { font-family: 'Jost', sans-serif; font-size: 13px; color: #e63; letter-spacing: 2px; margin-top: 4px; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="bg-glow"></div>
+
+  <!-- HOME -->
+  <div class="screen active" id="screen-home">
+    <div class="logo-icon">⚡</div>
+    <h1 class="logo-title">15 MIN<br><span>WORKOUT</span></h1>
+    <p class="logo-sub" id="home-sub"></p>
+    <div class="ex-list" id="ex-list"></div>
+    <button class="btn" onclick="startWorkout()">НАЧАТЬ ТРЕНИРОВКУ</button>
+  </div>
+
+  <!-- WORKOUT -->
+  <div class="screen" id="screen-workout">
+    <div class="progress-bar-wrap"><div class="progress-bar-fill" id="prog-fill" style="width:0%"></div></div>
+    <div class="round-label" id="round-label">РАУНД 1 / 3</div>
+    <div class="timer-wrap">
+      <svg id="timer-svg" width="140" height="140" style="transform:rotate(-90deg)">
+        <circle cx="70" cy="70" r="58" fill="none" stroke="#1a1a1a" stroke-width="7"/>
+        <circle id="timer-arc" cx="70" cy="70" r="58" fill="none" stroke="#e63" stroke-width="7" stroke-linecap="round"
+          stroke-dasharray="364.4" stroke-dashoffset="0"/>
+      </svg>
+      <div class="timer-inner">
+        <span class="timer-num" id="timer-num">45</span>
+        <span class="timer-label" id="timer-lbl" style="color:#e63">СЕК</span>
+      </div>
+    </div>
+    <div id="work-block">
+      <div class="ex-big" id="ex-name-big"></div>
+      <p class="ex-hint" id="ex-hint"></p>
+    </div>
+    <div id="rest-block" style="display:none">
+      <div class="rest-big">ОТДЫХ</div>
+      <p class="next-hint" id="next-hint"></p>
+    </div>
+    <div class="ctrl-row">
+      <button class="btn-ghost" onclick="exitWorkout()">✕</button>
+      <button class="btn" id="pause-btn" onclick="togglePause()">⏸ ПАУЗА</button>
+      <button class="btn-ghost" onclick="skipItem()">→</button>
+    </div>
+    <div class="dots" id="dots"></div>
+  </div>
+
+  <!-- DONE -->
+  <div class="screen" id="screen-done">
+    <div class="trophy">🏆</div>
+    <h2 class="done-title">ГОТОВО!</h2>
+    <p class="done-sub">Ты завершил тренировку</p>
+    <div class="stats-row">
+      <div><div class="stat-icon">⏱</div><div class="stat-label">15 МИН</div></div>
+      <div><div class="stat-icon">🔥</div><div class="stat-label" id="sets-label"></div></div>
+      <div><div class="stat-icon">💪</div><div class="stat-label">5 УПР</div></div>
+    </div>
+    <button class="btn" onclick="startWorkout()" style="margin-bottom:12px">СНОВА ▶</button>
+    <button class="btn-ghost" onclick="showScreen('home')" style="width:100%">НА ГЛАВНУЮ</button>
+  </div>
+</div>
+
+<script>
+const EXERCISES = [
+  { name:"Отжимания",  emoji:"💪", duration:45, rest:15, desc:"Руки на ширине плеч, корпус прямой" },
+  { name:"Приседания", emoji:"🦵", duration:45, rest:15, desc:"Спина прямая, колени не выходят за носки" },
+  { name:"Стульчик",   emoji:"🪑", duration:45, rest:15, desc:"Спина к стене, бёдра параллельны полу" },
+  { name:"Планка",     emoji:"🔥", duration:45, rest:15, desc:"Тело прямое, взгляд в пол, не задерживай дыхание" },
+  { name:"Выпады",     emoji:"🏃", duration:45, rest:15, desc:"Шаг вперёд, колено под прямым углом" },
+];
+const ROUNDS = 3;
+
+function buildQueue() {
+  const q = [];
+  for (let r = 0; r < ROUNDS; r++)
+    EXERCISES.forEach((ex, i) => {
+      q.push({ type:"work", exercise:ex, round:r+1 });
+      if (!(r===ROUNDS-1 && i===EXERCISES.length-1))
+        q.push({ type:"rest", exercise:ex, round:r+1 });
+    });
+  return q;
+}
+const QUEUE = buildQueue();
+const TOTAL_SEC = QUEUE.reduce((s,x) => s + (x.type==="work" ? x.exercise.duration : x.exercise.rest), 0);
+const CIRC = 2 * Math.PI * 58;
+
+let idx=0, timeLeft=0, running=false, elapsed=0, timer=null;
+let audioCtx = null;
+
+// Build home screen
+document.getElementById('home-sub').textContent = `${ROUNDS} раунда · ${EXERCISES.length} упражнений · дома`;
+document.getElementById('sets-label').textContent = `${EXERCISES.length*ROUNDS} СЕТ`;
+const list = document.getElementById('ex-list');
+EXERCISES.forEach(ex => {
+  list.innerHTML += `<div class="ex-item">
+    <span class="ex-emoji">${ex.emoji}</span>
+    <div><div class="ex-name">${ex.name}</div><div class="ex-desc">${ex.desc}</div></div>
+    <div class="ex-dur">45с</div>
+  </div>`;
+});
+// Build dots
+const dotsEl = document.getElementById('dots');
+EXERCISES.forEach(() => {
+  const d = document.createElement('div'); d.className='dot'; d.style.width='8px'; dotsEl.appendChild(d);
+});
+
+// Audio
+function getAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+function beep(freq=880, dur=0.1, vol=0.3) {
+  try {
+    const ctx = getAudio();
+    const osc = ctx.createOscillator(), gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.frequency.value = freq; osc.type = 'sine';
+    gain.gain.setValueAtTime(vol, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+dur);
+    osc.start(); osc.stop(ctx.currentTime+dur);
+  } catch(e){}
+}
+function beepCountdown() { beep(660,.08,.2); setTimeout(()=>beep(660,.08,.2),350); setTimeout(()=>beep(660,.08,.2),700); }
+function beepGo()   { beep(1100,.25,.4); }
+function beepRest() { beep(440,.15,.3); setTimeout(()=>beep(440,.15,.3),250); }
+function beepDone() { beep(523,.15,.3); setTimeout(()=>beep(659,.15,.3),180); setTimeout(()=>beep(784,.15,.3),360); setTimeout(()=>beep(1047,.3,.4),540); }
+
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById('screen-'+name);
+  el.classList.add('active');
+  // re-trigger animation
+  el.style.animation='none'; el.offsetHeight; el.style.animation='';
+}
+
+function renderItem() {
+  const item = QUEUE[idx];
+  const ex = item.exercise;
+  const dur = item.type==='work' ? ex.duration : ex.rest;
+
+  document.getElementById('round-label').textContent = `РАУНД ${item.round} / ${ROUNDS}`;
+
+  // arc
+  const arc = document.getElementById('timer-arc');
+  arc.style.transition = 'none';
+  arc.style.strokeDashoffset = 0;
+  arc.style.stroke = item.type==='rest' ? '#3a9' : '#e63';
+  arc.setAttribute('stroke-dasharray', CIRC);
+
+  document.getElementById('timer-num').textContent = timeLeft;
+  const lbl = document.getElementById('timer-lbl');
+  lbl.textContent = item.type==='rest' ? 'ОТДЫХ' : 'СЕК';
+  lbl.style.color = item.type==='rest' ? '#3a9' : '#e63';
+
+  if (item.type==='work') {
+    document.getElementById('work-block').style.display='block';
+    document.getElementById('rest-block').style.display='none';
+    document.getElementById('ex-name-big').textContent = ex.emoji+' '+ex.name.toUpperCase();
+    document.getElementById('ex-hint').textContent = ex.desc;
+  } else {
+    document.getElementById('work-block').style.display='none';
+    document.getElementById('rest-block').style.display='block';
+    const nextItem = QUEUE[idx+1];
+    document.getElementById('next-hint').textContent = nextItem
+      ? 'Следующее: '+nextItem.exercise.emoji+' '+nextItem.exercise.name : '';
+  }
+
+  // dots
+  const dots = dotsEl.children;
+  EXERCISES.forEach((ex2,i) => {
+    const active = ex2 === ex;
+    dots[i].style.width = active ? '28px' : '8px';
+    dots[i].style.background = active ? '#e63' : '#222';
+  });
+}
+
+function updateArc() {
+  const item = QUEUE[idx];
+  const dur = item.type==='work' ? item.exercise.duration : item.exercise.rest;
+  const frac = timeLeft / dur;
+  const arc = document.getElementById('timer-arc');
+  arc.style.transition = 'stroke-dashoffset 1s linear';
+  arc.style.strokeDashoffset = CIRC * (1 - frac);
+  document.getElementById('timer-num').textContent = timeLeft;
+  const prog = Math.min(elapsed / TOTAL_SEC, 1);
+  document.getElementById('prog-fill').style.width = (prog*100)+'%';
+}
+
+function tick() {
+  if (timeLeft === 4) beepCountdown();
+  if (timeLeft <= 1) {
+    clearInterval(timer); timer=null;
+    const next = idx+1;
+    if (next >= QUEUE.length) { beepDone(); showScreen('done'); running=false; return; }
+    idx=next; elapsed++;
+    timeLeft = QUEUE[idx].type==='work' ? QUEUE[idx].exercise.duration : QUEUE[idx].exercise.rest;
+    if (QUEUE[idx].type==='work') beepGo(); else beepRest();
+    renderItem(); updateArc();
+    if (running) startTimer();
+    return;
+  }
+  timeLeft--; elapsed++;
+  updateArc();
+}
+
+function startTimer() { if (timer) clearInterval(timer); timer = setInterval(tick, 1000); }
+
+function startWorkout() {
+  idx=0; elapsed=0; running=true;
+  timeLeft = QUEUE[0].type==='work' ? QUEUE[0].exercise.duration : QUEUE[0].exercise.rest;
+  showScreen('workout');
+  renderItem(); updateArc();
+  document.getElementById('pause-btn').textContent='⏸ ПАУЗА';
+  startTimer();
+  setTimeout(()=>beepGo(), 300);
+}
+
+function togglePause() {
+  running = !running;
+  document.getElementById('pause-btn').textContent = running ? '⏸ ПАУЗА' : '▶ СТАРТ';
+  if (running) startTimer(); else { clearInterval(timer); timer=null; }
+}
+
+function skipItem() {
+  clearInterval(timer); timer=null;
+  const next = idx+1;
+  if (next >= QUEUE.length) { showScreen('done'); running=false; return; }
+  idx=next;
+  timeLeft = QUEUE[idx].type==='work' ? QUEUE[idx].exercise.duration : QUEUE[idx].exercise.rest;
+  renderItem(); updateArc();
+  if (running) startTimer();
+}
+
+function exitWorkout() {
+  clearInterval(timer); timer=null; running=false;
+  showScreen('home');
+}
+</script>
+</body>
+</html>
